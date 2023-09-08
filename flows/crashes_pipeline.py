@@ -15,10 +15,10 @@ PROJECT_ID = "perfect-altar-395516"
 BQ_DATASET = "chicago_crashes"
 BQ_TABLENAME = "crashes_data"
 
-@task(cache_key_fn=task_input_hash, log_prints = True)
+@task( log_prints = True)
 def extract_data() -> pd.DataFrame:
     offset = 0
-    limit = 7000
+    limit = 50000
     old_len = 0
     df = pd.read_json(f"https://data.cityofchicago.org/resource/85ca-t3if.json?$$app_token={token}&$limit={limit}&$offset={offset}")
 
@@ -46,7 +46,7 @@ def tranform(df:pd.DataFrame)-> pd.DataFrame:
 
     return df
 
-@task()
+@task(cache_key_fn=task_input_hash)
 def write_local(df: pd.DataFrame, date:datetime) -> Path:
     """Write DataFrame out locally as parquet file"""
     year = date.strftime("%Y")
@@ -62,7 +62,7 @@ def write_local(df: pd.DataFrame, date:datetime) -> Path:
     return path
 
 
-@task()
+@task(cache_key_fn=task_input_hash)
 def write_gcs(path: Path) -> None:
     """Upload local parquet file to GCS"""
     gcp_bucket_block = GcsBucket.load("crashes")
@@ -77,7 +77,7 @@ def remove_file(path: Path):
     else:
         print(f"Error:{path}file not found")
 
-@task(log_prints = True)
+@task(log_prints = True, cache_key_fn=task_input_hash)
 def write_gbq(df):
     """ write dataframe to BigQuery"""
     df.to_gbq(

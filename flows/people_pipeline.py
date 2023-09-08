@@ -50,16 +50,16 @@ def write_local(df: pd.DataFrame, date:datetime) -> Path:
     month = date.strftime("%m")
     day = date.strftime("%d")
 
-    path = Path(f"./peole_raw_data/{year}/{month}")
+    path = Path(f"./people_raw_data/{year}/{month}")
     if not os.path.exists(path):
         os.makedirs(path)
         
-    path = f'./raw_data/{year}/{month}/{day}.parquet'
+    path = f'./people_raw_data/{year}/{month}/{day}.parquet'
     df.to_parquet(path, compression="gzip")
     return path
 
 
-@task()
+@task(cache_key_fn=task_input_hash)
 def write_gcs(path: Path) -> None:
     """Upload local parquet file to GCS"""
     gcp_bucket_block = GcsBucket.load("crashes")
@@ -67,14 +67,14 @@ def write_gcs(path: Path) -> None:
     gcp_bucket_block.upload_from_path(from_path=path, to_path=path, timeout=100000)
     return
 
-@task(log_prints=True)
+@task(log_prints=True, cache_key_fn=task_input_hash)
 def remove_file(path: Path):
     if os.path.isfile(path):
         os.remove(path)
     else:
         print(f"Error:{path}file not found")
 
-@task(log_prints = True)
+@task(log_prints = True, cache_key_fn=task_input_hash)
 def write_gbq(df):
     """ write dataframe to BigQuery"""
     table_id = f"{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLENAME}"
