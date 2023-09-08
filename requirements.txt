@@ -1,0 +1,7 @@
+prefect>=2.12.0
+httpx
+requests
+pandas
+prefect_gcp
+sodapy
+pyarrow
