@@ -10,43 +10,58 @@ from datetime import datetime, timedelta
 
 
 gcp_credentials_block = GcpCredentials.load("cred")
-token = "SxIz2jObj607193nFO4hWzVjk"
+TOKEN = "SxIz2jObj607193nFO4hWzVjk"
 PROJECT_ID = "perfect-altar-395516"
 BQ_DATASET = "chicago_crashes"
 BQ_TABLENAME = "crashes_data"
+DATA_KEY = "85ca-t3if"
 
-@task( log_prints = True)
-def extract_data() -> pd.DataFrame:
+@task(log_prints = True, cache_key_fn=task_input_hash)
+def extract_data(data_key) -> pd.DataFrame:
     offset = 0
     limit = 50000
     old_len = 0
-    df = pd.read_json(f"https://data.cityofchicago.org/resource/85ca-t3if.json?$$app_token={token}&$limit={limit}&$offset={offset}")
+    df = pd.read_json(f"https://data.cityofchicago.org/resource/{data_key}.json?$$app_token={TOKEN}&$limit={limit}&$offset={offset}")
 
     while len(df) != old_len:
         offset += limit
         old_len = len(df)
-        df = pd.concat([df, pd.read_json(f"https://data.cityofchicago.org/resource/85ca-t3if.json?$$app_token={token}&$limit={limit}&$offset={offset}")])
+        df = pd.concat([df, pd.read_json(f"https://data.cityofchicago.org/resource/{data_key}.json?$$app_token={TOKEN}&$limit={limit}&$offset={offset}")])
 
     return df
 
-@task(cache_key_fn=task_input_hash)
-def extract_data_daily(date:datetime) -> pd.DataFrame:
+@task()
+def extract_data_daily(date:datetime, data_key) -> pd.DataFrame:
     date = date - timedelta(days=1)
     day = date.strftime("%Y-%m-%d")
-    client = Socrata("data.cityofchicago.org", token)
-    results = client.get("85ca-t3if", where=f"crash_date > '{day}'")
+    client = Socrata("data.cityofchicago.org", TOKEN)
+    results = client.get(data_key, where=f"crash_date > '{day}'")
     df = pd.DataFrame.from_records(results)
     client.close()
     return df
 
 @task()
 def tranform(df:pd.DataFrame)-> pd.DataFrame:
+    df = df.astype(str)
     df['crash_date'] = pd.to_datetime(df["crash_date"])
     df["date_police_notified"] = pd.to_datetime(df["date_police_notified"])
+    df.drop(columns=[":@computed_region_rpca_8um6"], inplace=True, axis=1)
 
     return df
 
-@task(cache_key_fn=task_input_hash)
+@task(log_prints = True, cache_key_fn=task_input_hash)
+def write_gbq(df):
+    """ write dataframe to BigQuery"""
+    df.to_gbq(
+        destination_table= f"{BQ_DATASET}.{BQ_TABLENAME}",
+        project_id = PROJECT_ID,
+        credentials =gcp_credentials_block.get_credentials_from_service_account(),
+        chunksize =500000,
+        if_exists = "append"
+    )
+
+
+@task()
 def write_local(df: pd.DataFrame, date:datetime) -> Path:
     """Write DataFrame out locally as parquet file"""
     year = date.strftime("%Y")
@@ -62,6 +77,7 @@ def write_local(df: pd.DataFrame, date:datetime) -> Path:
     return path
 
 
+
 @task(cache_key_fn=task_input_hash)
 def write_gcs(path: Path) -> None:
     """Upload local parquet file to GCS"""
@@ -75,26 +91,16 @@ def remove_file(path: Path):
     if os.path.isfile(path):
         os.remove(path)
     else:
-        print(f"Error:{path}file not found")
+        print(f"{path} file not found")
 
-@task(log_prints = True, cache_key_fn=task_input_hash)
-def write_gbq(df):
-    """ write dataframe to BigQuery"""
-    df.to_gbq(
-        destination_table= f"{BQ_DATASET}.{BQ_TABLENAME}",
-        project_id = PROJECT_ID,
-        credentials =gcp_credentials_block.get_credentials_from_service_account(),
-        chunksize =500000,
-        if_exists = "append"
-    )
 
   
 
 @flow()
-def etl_web_to_gcs() -> None:
+def crashes_web_to_gcs() -> None:
     """The main ETL function"""
     date = datetime.now()
-    df = extract_data()
+    df = extract_data(DATA_KEY)
     df_clean = tranform(df)
     write_gbq(df_clean)
     path = write_local(df_clean, date)
@@ -103,10 +109,10 @@ def etl_web_to_gcs() -> None:
 
 
 @flow()
-def etl_web_to_gcs_daily() -> None:
+def crashes_web_to_gcs_daily() -> None:
     """The main ETL function for daily updating of data"""
     date = datetime.now()
-    df = extract_data_daily(date)
+    df = extract_data_daily(date, DATA_KEY)
     df_clean = tranform(df)
     write_gbq(df_clean)
     path = write_local(df_clean, date)
@@ -117,9 +123,9 @@ if __name__ == "__main__":
     """""
     date = datetime.now()
     cron = date.strftime("%M %H %d %m *")
-    first_flow = etl_web_to_gcs.to_deployment(name="first", cron=cron)
-    daily_flow = etl_web_to_gcs_daily.to_deployment(name="daily", rrule="FREQ=DAILY;INTERVAL=1")
+    first_flow = crashes_web_to_gcs.to_deployment(name="first", cron=cron)
+    daily_flow = crashes_web_to_gcs_daily.to_deployment(name="daily", rrule="FREQ=DAILY;INTERVAL=1")
     serve(first_flow, daily_flow)
     import serve!!!!
     """
-    etl_web_to_gcs()
+    crashes_web_to_gcs()

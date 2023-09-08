@@ -43,6 +43,18 @@ def tranform(df:pd.DataFrame)-> pd.DataFrame:
     df['crash_date'] = pd.to_datetime(df["crash_date"])
     return df
 
+
+@task(log_prints = True, cache_key_fn=task_input_hash)
+def write_gbq(df):
+    """ write dataframe to BigQuery"""
+    df.to_gbq(
+        destination_table= f"{BQ_DATASET}.{BQ_TABLENAME}",
+        project_id = PROJECT_ID,
+        credentials =gcp_credentials_block.get_credentials_from_service_account(),
+        chunksize =500000,
+        if_exists = "append"
+    )
+
 @task()
 def write_local(df: pd.DataFrame, date:datetime) -> Path:
     """Write DataFrame out locally as parquet file"""
@@ -74,17 +86,7 @@ def remove_file(path: Path):
     else:
         print(f"Error:{path}file not found")
 
-@task(log_prints = True, cache_key_fn=task_input_hash)
-def write_gbq(df):
-    """ write dataframe to BigQuery"""
-    table_id = f"{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLENAME}"
-    df.to_gbq(
-        destination_table= f"{BQ_DATASET}.{BQ_TABLENAME}",
-        project_id = PROJECT_ID,
-        credentials =gcp_credentials_block.get_credentials_from_service_account(),
-        chunksize =500000,
-        if_exists = "append"
-    )
+
 
   
 
