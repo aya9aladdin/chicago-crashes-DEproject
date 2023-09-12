@@ -1,0 +1,24 @@
+macros:
+  - name: day_time
+    description: >
+      This macro returns day time of crash damage
+    arguments:
+      - name: hour
+        type: int
+        description: > 
+          hour of the day
+  
+  - name: cellphone
+    description: 
+      This macro returns day time of crash damage
+    arguments:
+      - name: c
+        type: string
+        description: bla
+
+  - name: age_group
+    description: 
+      "generat age group category for each person"
+    arguments:
+      - name: age
+        type: int
