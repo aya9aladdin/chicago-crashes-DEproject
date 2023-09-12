@@ -1,0 +1,19 @@
+models:
+  - name: crash_type_severe_injuries_relation
+    description: find the ratio of sever injuries to total injuries for each crash prime contribtuio cause
+
+  - name: crashe_cause_by_age
+    description: find the ratio of each age group for every crash prime contribtuio cause
+
+  - name: crashe_cause_by_sex
+    description: find the ratio of each gender for every crash prime contribtuio cause
+
+  - name: driver_by_sex
+    description: find total ratio of crash driver contribution by sex
+
+  - name: month_daytime_crashes_ration
+    description: ratio of crash occurence at each daytime by month
+
+  - name: weather_influence_on_accidents
+    description: likehood of having the weather as the prime cause of a crash for each weather condition
+

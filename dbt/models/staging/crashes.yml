@@ -1,0 +1,12 @@
+sources:
+  - name: crashes
+    database: perfect-altar-395516
+    schema: chicago_crashes
+    tables:
+      - name: crashes_data
+      - name: people_data
+
+
+models:
+  - name: stg_crashes
+  
