@@ -1,4 +1,14 @@
-{{ config(materialized="table", unique_key="crash_record_id") }}
+{{
+    config(
+        materialized="table",
+        unique_key="crash_record_id",
+        partition_by={
+            "field": "crash_date",
+            "data_type": "timestamp",
+            "granularity": "year",
+        },
+    )
+}}
 
 with
     crashes_data as (
@@ -34,7 +44,6 @@ with
 
 select *, {{ day_time("crash_hour") }} as day_time
 from crashes_data
-limit 1000000
 
 {% if is_incremental() %}
 

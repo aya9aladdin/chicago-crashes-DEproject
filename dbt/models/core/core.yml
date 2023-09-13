@@ -16,4 +16,3 @@ models:
 
   - name: weather_influence_on_accidents
     description: likehood of having the weather as the prime cause of a crash for each weather condition
-

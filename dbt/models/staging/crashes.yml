@@ -6,7 +6,6 @@ sources:
       - name: crashes_data
       - name: people_data
 
-
 models:
   - name: stg_crashes
     columns:
@@ -14,16 +13,20 @@ models:
         tests:
           - accepted_values:
               values:
-                 ["midnight", "early morning" , "morning", "afternoon", "evening", "night"]
+                [
+                  "midnight",
+                  "early morning",
+                  "morning",
+                  "afternoon",
+                  "evening",
+                  "night",
+                ]
               severity: warn
       - name: crash_record_id
         tests: [not_null, unique]
-        
-                   
 
   - name: stg_people
     description: people included in the crashes
     columns:
       - name: person_id
         tests: [not_null, unique]
-          
