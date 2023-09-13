@@ -1,6 +1,7 @@
 {{
     config(
         materialized="incremental",
+        incremental_strategy="insert_overwrite"
         unique_key="crash_record_id",
         partition_by={
             "field": "crash_date",
