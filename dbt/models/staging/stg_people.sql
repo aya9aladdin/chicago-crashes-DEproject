@@ -1,4 +1,14 @@
-{{ config(materialized="incremental",  unique_key="person_id") }}
+{{
+    config(
+        materialized="incremental",
+        unique_key="person_id",
+        partition_by={
+            "field": "crash_date",
+            "data_type": "timestamp",
+            "granularity": "year",
+        },
+    )
+}}
 
 
 with
