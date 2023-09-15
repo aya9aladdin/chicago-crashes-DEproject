@@ -8,18 +8,27 @@ happen and how to prevent them, which will help save lives and make the city a s
 
 ## Data Source
 The traffic crashes dataset is taken from the [Chicago data portal](https://data.cityofchicago.org/browse?limitTo=datasets), which contains various open-access datasets related to the city.
-In my project I used two data sets; the [Traffic Crashes - Crashes dataset](https://data.cityofchicago.org/Transportation/Traffic-Crashes-Crashes/85ca-t3if), which shows information about each traffic crash on city streets within the City of Chicago and
-the [Traffic Crashes - People dataset](https://data.cityofchicago.org/Transportation/Traffic-Crashes-People/u6pd-qa9d) which shows information about people involved in a crash and if any injuries were sustained.
+In my project, I used two data sets the [Traffic Crashes - Crashes dataset](https://data.cityofchicago.org/Transportation/Traffic-Crashes-Crashes/85ca-t3if), which shows information about each traffic crash on city streets within the City of Chicago and
+the [Traffic Crashes - People dataset](https://data.cityofchicago.org/Transportation/Traffic-Crashes-People/u6pd-qa9d), which shows information about people involved in a crash and if any injuries were sustained.
+
+### Data API
+The [Socrata Open Data API (SODA)](https://dev.socrata.com/foundry/data.cityofchicago.org/u6pd-qa9d) provides programmatic access to this dataset, including the ability to filter, query, and aggregate data.
 
 
 ## Technologies
-The technologies that were chosen to use are the following:
+The technologies I used in developing the pipeline are:
 
     Cloud: GCP
     Data Lake: GCS buckets
     Data Warehouse: BigQuery
-    Infrastructure as code (IaC): Terraform
+    Infrastructure as Code (IaC): Terraform
     Workflow Orchestration: Prefect cloud
-    Transforming Data: DBT cloud
+    Flow containerization: Docker
+    Data Transformation: DBT cloud
     Data Visualization: Looker Studio
+    
+
+    
+
+
     
